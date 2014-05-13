@@ -29,445 +29,555 @@ package net.jcores.jre.cores.adapter;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
 /**
  * Wraps arbitrary collections with on-demand element access and caching.
  * 
  * @author Ralf Biedert
  * @since 1.0
- * @param <I> The type of the incoming collection 
- * @param <O> The type of the adapter.
+ * @param <I>
+ *            The type of the incoming collection
+ * @param <O>
+ *            The type of the adapter.
  */
-public class CollectionAdapter<I, O> extends AbstractAdapter<O> implements List<O> {
-    /** */
-    private static final long serialVersionUID = 7010286694628298017L;
+public class CollectionAdapter<I, O> extends AbstractAdapter<O> implements
+		List<O> {
+	/** */
+	private static final long serialVersionUID = 7010286694628298017L;
 
-    /** Our primary collection iterator */
-    Iterator<I> iterator;
+	/** Our primary collection iterator */
+	Iterator<I> iterator;
 
-    /** Our cache array */
-    AtomicReferenceArray<O> array;
+	/** Our cache array */
+	AtomicReferenceArray<O> array;
 
-    /** Specifies up to which index we have elements in our array cache */
-    AtomicInteger inCache;
+	/** Specifies up to which index we have elements in our array cache */
+	AtomicInteger inCache;
 
-    /** Locks access to the collection's iterator */
-    ReentrantLock collectionLock;
-    
-    /** The inclusive start index which we handle */
-    final int start;
-    
-    /** The inclusive end index we handle */
-    final int end;
+	/** Locks access to the collection's iterator */
+	ReentrantLock collectionLock;
 
-    public CollectionAdapter(Collection<I> collection) {
-        this.inCache = new AtomicInteger(-1);
-        this.collectionLock = new ReentrantLock();
-        this.iterator = collection.iterator();
-        this.array = new AtomicReferenceArray<O>(collection.size());
-        this.start = 0;
-        this.end = collection.size() - 1;
-    }
+	/** The inclusive start index which we handle */
+	final int start;
 
-    private CollectionAdapter(int start, int end) {
-        this.start = start;
-        this.end = end;
-    }
+	/** The inclusive end index we handle */
+	final int end;
 
-    
-    /**
-     * Standard converter just converts
-     * 
-     * @param i
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    protected O converter(I i) {
-        return (O) i;
-    }
-    
-    /*
-     * (non-Javadoc)
-     * 
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#size()
-     */
-    @Override
-    public int size() {
-        return (this.end - this.start) + 1;
-    }
+	public CollectionAdapter(Collection<I> collection) {
+		this.inCache = new AtomicInteger(-1);
+		this.collectionLock = new ReentrantLock();
+		this.iterator = collection.iterator();
+		this.array = new AtomicReferenceArray<O>(collection.size());
+		this.start = 0;
+		this.end = collection.size() - 1;
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#get(int)
-     */
-    @Override
-    public O get(int i) {
-        final int ii = i + this.start;
-        cacheUntil(ii);
-        return _get(ii);
-    }
-    
-    private final O _get(int i) {
-        return this.array.get(i);
-    }
+	private CollectionAdapter(int start, int end) {
+		this.start = start;
+		this.end = end;
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#iterator()
-     */
-    @Override
-    public ListIterator<O> iterator() {
-        return new ListIterator<O>() {
-            volatile int i = 0;
-            
-            @Override
-            public boolean hasNext() {
-                return CollectionAdapter.this.start + this.i <= CollectionAdapter.this.end;
-            }
+	/**
+	 * Standard converter just converts
+	 * 
+	 * @param i
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	protected O converter(I i) {
+		return (O) i;
+	}
 
-            @Override
-            public O next() {
-                cacheUntil(CollectionAdapter.this.start + this.i);
-                return get(this.i++);
-            }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#size()
+	 */
+	@Override
+	public int size() {
+		return (this.end - this.start) + 1;
+	}
 
-            @Override
-            public boolean hasPrevious() {
-                return this.i > CollectionAdapter.this.start;
-            }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#get(int)
+	 */
+	@Override
+	public O get(int i) {
+		final int ii = i + this.start;
+		cacheUntil(ii);
+		return _get(ii);
+	}
 
-            @Override
-            public O previous() {
-                this.i--;
-                return get(CollectionAdapter.this.start + this.i);
-            }
+	private final O _get(int i) {
+		return this.array.get(i);
+	}
 
-            @Override
-            public int nextIndex() {
-                return CollectionAdapter.this.start + this.i;
-            }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#iterator()
+	 */
+	@Override
+	public ListIterator<O> iterator() {
+		return new ListIterator<O>() {
+			volatile int i = 0;
 
-            @Override
-            public int previousIndex() {
-                return CollectionAdapter.this.start + this.i - 1;
-            }
+			@Override
+			public boolean hasNext() {
+				return CollectionAdapter.this.start + this.i <= CollectionAdapter.this.end;
+			}
 
-            @Override
-            public void remove() {
-            }
+			@Override
+			public O next() {
+				cacheUntil(CollectionAdapter.this.start + this.i);
+				return get(this.i++);
+			}
 
-            @Override
-            public void set(O e) {
-            }
+			@Override
+			public boolean hasPrevious() {
+				return this.i > CollectionAdapter.this.start;
+			}
 
-            @Override
-            public void add(O e) {
-            }
-        };
-    }
+			@Override
+			public O previous() {
+				this.i--;
+				return get(CollectionAdapter.this.start + this.i);
+			}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#array(java.lang.Class)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public <N> N[] array(Class<N> in) {
-        cacheAll();
+			@Override
+			public int nextIndex() {
+				return CollectionAdapter.this.start + this.i;
+			}
 
-        final N[] rval = (N[]) Array.newInstance(in, size());
-        for (int i = this.start; i < rval.length; i++) {
-            rval[i] = (N) _get(i);
-        }
+			@Override
+			public int previousIndex() {
+				return CollectionAdapter.this.start + this.i - 1;
+			}
 
-        return rval;
-    }
+			@Override
+			public void remove() {
+			}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#unsafelist()
-     */
-    @Override
-    public List<O> unsafelist() {
-        return this;
-    }
+			@Override
+			public void set(O e) {
+			}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#slice(int, int)
-     */
-    @Override
-    public List<O> slice(int a, int b) {
-        final CollectionAdapter<I, O> adapter = new CollectionAdapter<I, O>(this.start + a, this.start + a + (b - a) - 1);
-        adapter.array = this.array;
-        adapter.collectionLock = this.collectionLock;
-        adapter.inCache = this.inCache;
-        adapter.iterator = this.iterator;
-        
-        return adapter;
-    }
+			@Override
+			public void add(O e) {
+			}
 
-    /**
-     * Cache all our elemnts
-     */
-    protected void cacheAll() {
-        cacheUntil(this.end);
-    }
+			@Override
+			public void forEachRemaining(Consumer<? super O> action) {
+				// TODO Auto-generated method stub
 
-    
-    /**
-     * Cache the collection until the given element 
-     * 
-     * @param request
-     */
-    protected void cacheUntil(int request) {
-        // When the cached value already exceeds the limit we dont have to do anything
-        if (this.inCache.intValue() >= request) return;
+			}
+		};
+	}
 
-        this.collectionLock.lock();
-        try {
-            //System.out.println(Thread.currentThread() + ": " + this.inCache + " -> " + request);
-            // Iterator might have been gone due to another thread that just exited the lock while we entered
-            if (this.iterator == null) return;
-            
-            while (this.iterator.hasNext()) {
-                int i = this.inCache.get();
-                this.array.set(i + 1, converter(this.iterator.next()));
-                this.inCache.set(i + 1);
-                if (i > request) break;
-            }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * net.jcores.shared.cores.adapter.AbstractAdapter#array(java.lang.Class)
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public <N> N[] array(Class<N> in) {
+		cacheAll();
 
-            // Eventually dump the iterator to free up space
-            if (!this.iterator.hasNext()) {
-                this.iterator = null;
-            }
-        } finally {
-            this.collectionLock.unlock();
-        }
-    }
+		final N[] rval = (N[]) Array.newInstance(in, size());
+		for (int i = this.start; i < rval.length; i++) {
+			rval[i] = (N) _get(i);
+		}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.List#isEmpty()
-     */
-    @Override
-    public boolean isEmpty() {
-        return this.end - this.start < 0;
-    }
+		return rval;
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.List#contains(java.lang.Object)
-     */
-    @Override
-    public boolean contains(Object o) {
-        final ListIterator<O> i = iterator();
-        while (i.hasNext()) {
-            O next = i.next();
-            if (next == null) continue;
-            if (next.equals(o)) return true;
-        }
-        return false;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#unsafelist()
+	 */
+	@Override
+	public List<O> unsafelist() {
+		return this;
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.List#toArray()
-     */
-    @Override
-    public Object[] toArray() {
-        cacheAll();
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#slice(int, int)
+	 */
+	@Override
+	public List<O> slice(int a, int b) {
+		final CollectionAdapter<I, O> adapter = new CollectionAdapter<I, O>(
+				this.start + a, this.start + a + (b - a) - 1);
+		adapter.array = this.array;
+		adapter.collectionLock = this.collectionLock;
+		adapter.inCache = this.inCache;
+		adapter.iterator = this.iterator;
 
-        final Object[] rval = (Object[]) Array.newInstance(Object.class, size());
-        for (int i = this.start; i < rval.length; i++) {
-            rval[i] = _get(i);
-        }
+		return adapter;
+	}
 
-        return rval;
-    }
+	/**
+	 * Cache all our elemnts
+	 */
+	protected void cacheAll() {
+		cacheUntil(this.end);
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.List#toArray(T[])
-     */
-    @SuppressWarnings({ "unchecked" })
-    @Override
-    public <T> T[] toArray(T[] a) {
-        cacheAll();
+	/**
+	 * Cache the collection until the given element
+	 * 
+	 * @param request
+	 */
+	protected void cacheUntil(int request) {
+		// When the cached value already exceeds the limit we dont have to do
+		// anything
+		if (this.inCache.intValue() >= request)
+			return;
 
-        // Our return value array
-        T[] rval = null;
+		this.collectionLock.lock();
+		try {
+			// System.out.println(Thread.currentThread() + ": " + this.inCache +
+			// " -> " + request);
+			// Iterator might have been gone due to another thread that just
+			// exited the lock while we entered
+			if (this.iterator == null)
+				return;
 
-        // Check if the passed array fits the data
-        if (a.length >= this.array.length()) {
-            rval = a;
-        } else {
-            rval = (T[]) Array.newInstance(a.getClass().getComponentType(), size());
-        }
+			while (this.iterator.hasNext()) {
+				int i = this.inCache.get();
+				this.array.set(i + 1, converter(this.iterator.next()));
+				this.inCache.set(i + 1);
+				if (i > request)
+					break;
+			}
 
-        // Fill the array
-        for (int i = this.start; i < rval.length; i++) {
-            rval[i] = (T) _get(i);
-        }
+			// Eventually dump the iterator to free up space
+			if (!this.iterator.hasNext()) {
+				this.iterator = null;
+			}
+		} finally {
+			this.collectionLock.unlock();
+		}
+	}
 
-        return rval;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#isEmpty()
+	 */
+	@Override
+	public boolean isEmpty() {
+		return this.end - this.start < 0;
+	}
 
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#contains(java.lang.Object)
+	 */
+	@Override
+	public boolean contains(Object o) {
+		final ListIterator<O> i = iterator();
+		while (i.hasNext()) {
+			O next = i.next();
+			if (next == null)
+				continue;
+			if (next.equals(o))
+				return true;
+		}
+		return false;
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.List#add(java.lang.Object)
-     */
-    @Override
-    public boolean add(O e) {
-        return false;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#toArray()
+	 */
+	@Override
+	public Object[] toArray() {
+		cacheAll();
 
-    /* (non-Javadoc)
-     * @see java.util.List#remove(java.lang.Object)
-     */
-    @Override
-    public boolean remove(Object o) {
-        return false;
-    }
+		final Object[] rval = (Object[]) Array
+				.newInstance(Object.class, size());
+		for (int i = this.start; i < rval.length; i++) {
+			rval[i] = _get(i);
+		}
 
-    /* (non-Javadoc)
-     * @see java.util.List#containsAll(java.util.Collection)
-     */
-    @Override
-    public boolean containsAll(Collection<?> c) {
-        for (Object o : c) {
-            if (!contains(o)) return false;
-        }
-        return true;
-    }
+		return rval;
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.List#addAll(java.util.Collection)
-     */
-    @Override
-    public boolean addAll(Collection<? extends O> c) {
-        return false;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#toArray(T[])
+	 */
+	@SuppressWarnings({ "unchecked" })
+	@Override
+	public <T> T[] toArray(T[] a) {
+		cacheAll();
 
-    /* (non-Javadoc)
-     * @see java.util.List#addAll(int, java.util.Collection)
-     */
-    @Override
-    public boolean addAll(int index, Collection<? extends O> c) {
-        return false;
-    }
+		// Our return value array
+		T[] rval = null;
 
-    /* (non-Javadoc)
-     * @see java.util.List#removeAll(java.util.Collection)
-     */
-    @Override
-    public boolean removeAll(Collection<?> c) {
-        return false;
-    }
+		// Check if the passed array fits the data
+		if (a.length >= this.array.length()) {
+			rval = a;
+		} else {
+			rval = (T[]) Array.newInstance(a.getClass().getComponentType(),
+					size());
+		}
 
-    /* (non-Javadoc)
-     * @see java.util.List#retainAll(java.util.Collection)
-     */
-    @Override
-    public boolean retainAll(Collection<?> c) {
-        return false;
-    }
+		// Fill the array
+		for (int i = this.start; i < rval.length; i++) {
+			rval[i] = (T) _get(i);
+		}
 
-    /* (non-Javadoc)
-     * @see java.util.List#clear()
-     */
-    @Override
-    public void clear() {}
+		return rval;
 
-    /* (non-Javadoc)
-     * @see java.util.List#set(int, java.lang.Object)
-     */
-    @Override
-    public O set(int index, O element) {
-        return null;
-    }
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.List#add(int, java.lang.Object)
-     */
-    @Override
-    public void add(int index, O element) {}
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#add(java.lang.Object)
+	 */
+	@Override
+	public boolean add(O e) {
+		return false;
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.List#remove(int)
-     */
-    @Override
-    public O remove(int index) {
-        return null;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#remove(java.lang.Object)
+	 */
+	@Override
+	public boolean remove(Object o) {
+		return false;
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.List#indexOf(java.lang.Object)
-     */
-    @Override
-    public int indexOf(Object o) {
-        final ListIterator<O> i = iterator();
-        while (i.hasNext()) {
-            int index = i.nextIndex();
-            O next = i.next();
-            if (next == null) continue;
-            if (next.equals(o)) return index;
-        }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#containsAll(java.util.Collection)
+	 */
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		for (Object o : c) {
+			if (!contains(o))
+				return false;
+		}
+		return true;
+	}
 
-        return -1;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#addAll(java.util.Collection)
+	 */
+	@Override
+	public boolean addAll(Collection<? extends O> c) {
+		return false;
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.List#lastIndexOf(java.lang.Object)
-     */
-    @Override
-    public int lastIndexOf(Object o) {
-        cacheAll();
-        for (int i = this.end; i >= this.start; i--) {
-            O next = get(i);
-            if (next == null) continue;
-            if (next.equals(o)) return i;
-        }
-        return -1;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#addAll(int, java.util.Collection)
+	 */
+	@Override
+	public boolean addAll(int index, Collection<? extends O> c) {
+		return false;
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.List#listIterator()
-     */
-    @Override
-    public ListIterator<O> listIterator() {
-        return iterator();
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#removeAll(java.util.Collection)
+	 */
+	@Override
+	public boolean removeAll(Collection<?> c) {
+		return false;
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.List#listIterator(int)
-     */
-    @Override
-    public ListIterator<O> listIterator(int index) {
-        ListIterator<O> iterator2 = iterator();
-        for (int i = 0; i < index; i++) {
-            iterator2.next();
-        }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#retainAll(java.util.Collection)
+	 */
+	@Override
+	public boolean retainAll(Collection<?> c) {
+		return false;
+	}
 
-        return iterator2;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#clear()
+	 */
+	@Override
+	public void clear() {
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.List#subList(int, int)
-     */
-    @Override
-    public List<O> subList(int fromIndex, int toIndex) {
-        return slice(fromIndex, toIndex);
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#set(int, java.lang.Object)
+	 */
+	@Override
+	public O set(int index, O element) {
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#add(int, java.lang.Object)
+	 */
+	@Override
+	public void add(int index, O element) {
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#remove(int)
+	 */
+	@Override
+	public O remove(int index) {
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#indexOf(java.lang.Object)
+	 */
+	@Override
+	public int indexOf(Object o) {
+		final ListIterator<O> i = iterator();
+		while (i.hasNext()) {
+			int index = i.nextIndex();
+			O next = i.next();
+			if (next == null)
+				continue;
+			if (next.equals(o))
+				return index;
+		}
+
+		return -1;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#lastIndexOf(java.lang.Object)
+	 */
+	@Override
+	public int lastIndexOf(Object o) {
+		cacheAll();
+		for (int i = this.end; i >= this.start; i--) {
+			O next = get(i);
+			if (next == null)
+				continue;
+			if (next.equals(o))
+				return i;
+		}
+		return -1;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#listIterator()
+	 */
+	@Override
+	public ListIterator<O> listIterator() {
+		return iterator();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#listIterator(int)
+	 */
+	@Override
+	public ListIterator<O> listIterator(int index) {
+		ListIterator<O> iterator2 = iterator();
+		for (int i = 0; i < index; i++) {
+			iterator2.next();
+		}
+
+		return iterator2;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.List#subList(int, int)
+	 */
+	@Override
+	public List<O> subList(int fromIndex, int toIndex) {
+		return slice(fromIndex, toIndex);
+	}
+
+	@Override
+	public boolean removeIf(Predicate<? super O> filter) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Stream<O> stream() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Stream<O> parallelStream() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void forEach(Consumer<? super O> action) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void replaceAll(UnaryOperator<O> operator) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void sort(Comparator<? super O> c) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Spliterator<O> spliterator() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

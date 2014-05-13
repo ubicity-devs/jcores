@@ -28,57 +28,123 @@
 package net.jcores.jre.utils.map;
 
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
- * A {@link ConcurrentMap} decorator that, similar to <a href="http://code.google.com/p/guava-libraries/">Google's Guava</a>, 
- * provides some extra functions for maps. 
+ * A {@link ConcurrentMap} decorator that, similar to <a
+ * href="http://code.google.com/p/guava-libraries/">Google's Guava</a>, provides
+ * some extra functions for maps.
  * 
  * @author Ralf Biedert
  *
- * @param <K> The type of the key.
- * @param <V> The type of the value.
+ * @param <K>
+ *            The type of the key.
+ * @param <V>
+ *            The type of the value.
  * @since 1.0
  */
-public class ConcurrentMapUtil<K, V> extends MapUtil<K, V> implements ConcurrentMap<K, V> {
+public class ConcurrentMapUtil<K, V> extends MapUtil<K, V> implements
+		ConcurrentMap<K, V> {
 
-    /** Here we also store the object, for concurrent opearations */
-    private ConcurrentMap<K, V> concurrentObject;
+	/** Here we also store the object, for concurrent opearations */
+	private final ConcurrentMap<K, V> concurrentObject;
 
-    public ConcurrentMapUtil(ConcurrentMap<K, V> object) {
-        super(object);
-        this.concurrentObject = object;
-    }
+	public ConcurrentMapUtil(ConcurrentMap<K, V> object) {
+		super(object);
+		this.concurrentObject = object;
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.concurrent.ConcurrentMap#putIfAbsent(java.lang.Object, java.lang.Object)
-     */
-    @Override
-    public V putIfAbsent(K key, V value) {
-        return this.concurrentObject.putIfAbsent(key, value);
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.concurrent.ConcurrentMap#putIfAbsent(java.lang.Object,
+	 * java.lang.Object)
+	 */
+	@Override
+	public V putIfAbsent(K key, V value) {
+		return this.concurrentObject.putIfAbsent(key, value);
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.concurrent.ConcurrentMap#remove(java.lang.Object, java.lang.Object)
-     */
-    @Override
-    public boolean remove(Object key, Object value) {
-        return this.concurrentObject.remove(key, value);
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.concurrent.ConcurrentMap#remove(java.lang.Object,
+	 * java.lang.Object)
+	 */
+	@Override
+	public boolean remove(Object key, Object value) {
+		return this.concurrentObject.remove(key, value);
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.concurrent.ConcurrentMap#replace(java.lang.Object, java.lang.Object)
-     */
-    @Override
-    public V replace(K key, V value) {
-        return this.concurrentObject.replace(key, value);
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.concurrent.ConcurrentMap#replace(java.lang.Object,
+	 * java.lang.Object)
+	 */
+	@Override
+	public V replace(K key, V value) {
+		return this.concurrentObject.replace(key, value);
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.concurrent.ConcurrentMap#replace(java.lang.Object, java.lang.Object, java.lang.Object)
-     */
-    @Override
-    public boolean replace(K key, V oldValue, V newValue) {
-        return this.concurrentObject.replace(key, oldValue, newValue);
-    }
-    
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.concurrent.ConcurrentMap#replace(java.lang.Object,
+	 * java.lang.Object, java.lang.Object)
+	 */
+	@Override
+	public boolean replace(K key, V oldValue, V newValue) {
+		return this.concurrentObject.replace(key, oldValue, newValue);
+	}
+
+	@Override
+	public V getOrDefault(Object key, V defaultValue) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void forEach(BiConsumer<? super K, ? super V> action) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void replaceAll(
+			BiFunction<? super K, ? super V, ? extends V> function) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public V computeIfAbsent(K key,
+			Function<? super K, ? extends V> mappingFunction) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public V computeIfPresent(K key,
+			BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public V compute(K key,
+			BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public V merge(K key, V value,
+			BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

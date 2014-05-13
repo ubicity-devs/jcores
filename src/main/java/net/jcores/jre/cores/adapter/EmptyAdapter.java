@@ -31,7 +31,8 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 /**
  * Wraps nothing.
@@ -42,110 +43,145 @@ import java.util.ListIterator;
  */
 public final class EmptyAdapter<T> extends AbstractAdapter<T> {
 
-    /** */
-    private static final long serialVersionUID = 3490313697090606615L;
+	/** */
+	private static final long serialVersionUID = 3490313697090606615L;
 
-    public EmptyAdapter() {
-    }
-    
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#size()
-     */
-    @Override
-    public int size() {
-        return 0;
-    }
+	public EmptyAdapter() {
+	}
 
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#get(int)
-     */
-    @Override
-    public T get(int i) {
-        return null;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#size()
+	 */
+	@Override
+	public int size() {
+		return 0;
+	}
 
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#iterator()
-     */
-    @Override
-    public ListIterator<T> iterator() {
-        return new ListIterator<T>() {
-            
-            /* (non-Javadoc)
-             * @see java.util.ListIterator#hasNext()
-             */
-            @Override
-            public boolean hasNext() {
-                return false;
-            }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#get(int)
+	 */
+	@Override
+	public T get(int i) {
+		return null;
+	}
 
-            /* (non-Javadoc)
-             * @see java.util.ListIterator#next()
-             */
-            @Override
-            public T next() {
-                return null;
-            }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#iterator()
+	 */
+	@Override
+	public ListIterator<T> iterator() {
+		return new ListIterator<T>() {
 
-            @Override
-            public boolean hasPrevious() {
-                return false;
-            }
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see java.util.ListIterator#hasNext()
+			 */
+			@Override
+			public boolean hasNext() {
+				return false;
+			}
 
-            @Override
-            public T previous() {
-                return null;
-            }
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see java.util.ListIterator#next()
+			 */
+			@Override
+			public T next() {
+				return null;
+			}
 
-            @Override
-            public int nextIndex() {
-                return 0;
-            }
+			@Override
+			public boolean hasPrevious() {
+				return false;
+			}
 
-            @Override
-            public int previousIndex() {
-                return 0;
-            }
+			@Override
+			public T previous() {
+				return null;
+			}
 
-            @Override
-            public void remove() {
-                // 
-            }
+			@Override
+			public int nextIndex() {
+				return 0;
+			}
 
-            @Override
-            public void set(T e) {
-                // 
-            }
+			@Override
+			public int previousIndex() {
+				return 0;
+			}
 
-            @Override
-            public void add(T e) {
-                //
-            }
-        };
-    }
+			@Override
+			public void remove() {
+				//
+			}
 
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#array(java.lang.Class)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public <N> N[] array(Class<N> in) {
-        return (N[]) Array.newInstance(in, 0);
-    }
-    
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#unsafelist()
-     */
-    @Override
-    public List<T> unsafelist() {
-        return new ArrayList<T>();
-    }
+			@Override
+			public void set(T e) {
+				//
+			}
 
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#slice(int, int)
-     */
-    @Override
-    public List<T> slice(int start, int end) {
-        return new ArrayList<T>();
-    }
+			@Override
+			public void add(T e) {
+				//
+			}
+
+			@Override
+			public void forEachRemaining(Consumer<? super T> action) {
+				// TODO Auto-generated method stub
+
+			}
+		};
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * net.jcores.shared.cores.adapter.AbstractAdapter#array(java.lang.Class)
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public <N> N[] array(Class<N> in) {
+		return (N[]) Array.newInstance(in, 0);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#unsafelist()
+	 */
+	@Override
+	public List<T> unsafelist() {
+		return new ArrayList<T>();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#slice(int, int)
+	 */
+	@Override
+	public List<T> slice(int start, int end) {
+		return new ArrayList<T>();
+	}
+
+	@Override
+	public void forEach(Consumer<? super T> action) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Spliterator<T> spliterator() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

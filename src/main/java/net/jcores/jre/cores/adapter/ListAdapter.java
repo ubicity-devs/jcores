@@ -30,73 +30,100 @@ package net.jcores.jre.cores.adapter;
 import java.lang.reflect.Array;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 /**
- * Wraps (random access) lists. This adapter should <b>not</b> be used with 
- * LinkedLists and similar data structures. Use the {@link CollectionAdapter} for them
- * if possible. 
+ * Wraps (random access) lists. This adapter should <b>not</b> be used with
+ * LinkedLists and similar data structures. Use the {@link CollectionAdapter}
+ * for them if possible.
  * 
  * @author Ralf Biedert
  * @since 1.0
  * @param <T>
  */
 public final class ListAdapter<T> extends AbstractAdapter<T> {
-    /** */
-    private static final long serialVersionUID = -5292390771798957764L;
-    
-    /** */
-    final List<T> list;
+	/** */
+	private static final long serialVersionUID = -5292390771798957764L;
 
-    public ListAdapter(List<T> list) {
-        this.list = list;
-    }
-    
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#size()
-     */
-    @Override
-    public int size() {
-        return this.list.size();
-    }
+	/** */
+	final List<T> list;
 
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#get(int)
-     */
-    @Override
-    public T get(int i) {
-        return this.list.get(i);
-    }
+	public ListAdapter(List<T> list) {
+		this.list = list;
+	}
 
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#iterator()
-     */
-    @Override
-    public ListIterator<T> iterator() {
-        return this.list.listIterator();
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#size()
+	 */
+	@Override
+	public int size() {
+		return this.list.size();
+	}
 
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#array(java.lang.Class)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public <N> N[] array(Class<N> in) {
-        return (N[]) this.list.toArray((T[]) Array.newInstance(in, 0));
-    }
-    
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#unsafelist()
-     */
-    @Override
-    public List<T> unsafelist() {
-        return this.list;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#get(int)
+	 */
+	@Override
+	public T get(int i) {
+		return this.list.get(i);
+	}
 
-    /* (non-Javadoc)
-     * @see net.jcores.shared.cores.adapter.AbstractAdapter#slice(int, int)
-     */
-    @Override
-    public List<T> slice(int start, int end) {
-        return this.list.subList(start, end);
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#iterator()
+	 */
+	@Override
+	public ListIterator<T> iterator() {
+		return this.list.listIterator();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * net.jcores.shared.cores.adapter.AbstractAdapter#array(java.lang.Class)
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public <N> N[] array(Class<N> in) {
+		return (N[]) this.list.toArray((T[]) Array.newInstance(in, 0));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#unsafelist()
+	 */
+	@Override
+	public List<T> unsafelist() {
+		return this.list;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.jcores.shared.cores.adapter.AbstractAdapter#slice(int, int)
+	 */
+	@Override
+	public List<T> slice(int start, int end) {
+		return this.list.subList(start, end);
+	}
+
+	@Override
+	public void forEach(Consumer<? super T> action) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Spliterator<T> spliterator() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

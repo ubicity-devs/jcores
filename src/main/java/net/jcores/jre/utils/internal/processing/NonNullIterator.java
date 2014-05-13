@@ -28,159 +28,173 @@
 package net.jcores.jre.utils.internal.processing;
 
 import java.util.ListIterator;
+import java.util.function.Consumer;
 
 public class NonNullIterator<T> implements ListIterator<T> {
 
-    /** The parent iterator */
-    private ListIterator<T> parent;
+	/** The parent iterator */
+	private final ListIterator<T> parent;
 
-    /** The next element we output */
-    private T next = null;
+	/** The next element we output */
+	private T next = null;
 
-    /** The previous element we output */
-    private T previous = null;
+	/** The previous element we output */
+	private T previous = null;
 
-    /**  */
-    private int nextIndex = 0;
+	/**  */
+	private int nextIndex = 0;
 
-    /** */
-    private int previousIndex = -1;
+	/** */
+	private int previousIndex = -1;
 
-    /**
-     * Constructs a new non-null iterator.
-     * 
-     * @param parent
-     */
-    public NonNullIterator(ListIterator<T> parent) {
-        this.parent = parent;
-    }
+	/**
+	 * Constructs a new non-null iterator.
+	 * 
+	 * @param parent
+	 */
+	public NonNullIterator(ListIterator<T> parent) {
+		this.parent = parent;
+	}
 
-    private void getNext() {
-        this.next = null;
+	private void getNext() {
+		this.next = null;
 
-        while (this.parent.hasNext()) {
-            this.nextIndex = this.parent.nextIndex();
-            this.next = this.parent.next();
-            if (this.next != null) return;
-        }
-    }
+		while (this.parent.hasNext()) {
+			this.nextIndex = this.parent.nextIndex();
+			this.next = this.parent.next();
+			if (this.next != null)
+				return;
+		}
+	}
 
-    private void getPrevious() {
-        this.previous = null;
+	private void getPrevious() {
+		this.previous = null;
 
-        while (this.parent.hasPrevious()) {
-            this.previousIndex = this.parent.previousIndex();
-            this.previous = this.parent.previous();
-            if (this.previous != null) return;
-        }
-    }
+		while (this.parent.hasPrevious()) {
+			this.previousIndex = this.parent.previousIndex();
+			this.previous = this.parent.previous();
+			if (this.previous != null)
+				return;
+		}
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#hasNext()
-     */
-    @Override
-    public boolean hasNext() {
-        // First check if we have a next element
-        if (this.next != null) return true;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.ListIterator#hasNext()
+	 */
+	@Override
+	public boolean hasNext() {
+		// First check if we have a next element
+		if (this.next != null)
+			return true;
 
-        getNext();
+		getNext();
 
-        // And check what we can return
-        return this.next != null;
-    }
+		// And check what we can return
+		return this.next != null;
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#next()
-     */
-    @Override
-    public T next() {
-        final T rval = this.next;
-        this.previous = this.next;
-        this.previousIndex = this.nextIndex;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.ListIterator#next()
+	 */
+	@Override
+	public T next() {
+		final T rval = this.next;
+		this.previous = this.next;
+		this.previousIndex = this.nextIndex;
 
-        getNext();
+		getNext();
 
-        return rval;
-    }
+		return rval;
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#hasPrevious()
-     */
-    @Override
-    public boolean hasPrevious() {
-        // First check if we have a next element
-        if (this.previous != null) return true;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.ListIterator#hasPrevious()
+	 */
+	@Override
+	public boolean hasPrevious() {
+		// First check if we have a next element
+		if (this.previous != null)
+			return true;
 
-        getPrevious();
+		getPrevious();
 
-        // And check what we can return
-        return this.previous != null;
-    }
+		// And check what we can return
+		return this.previous != null;
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#previous()
-     */
-    @Override
-    public T previous() {
-        final T rval = this.previous;
-        this.next = this.previous;
-        this.nextIndex = this.previousIndex;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.ListIterator#previous()
+	 */
+	@Override
+	public T previous() {
+		final T rval = this.previous;
+		this.next = this.previous;
+		this.nextIndex = this.previousIndex;
 
-        getPrevious();
+		getPrevious();
 
-        return rval;
+		return rval;
 
-    }
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#nextIndex()
-     */
-    @Override
-    public int nextIndex() {
-        return this.nextIndex;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.ListIterator#nextIndex()
+	 */
+	@Override
+	public int nextIndex() {
+		return this.nextIndex;
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#previousIndex()
-     */
-    @Override
-    public int previousIndex() {
-        return this.previousIndex;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.ListIterator#previousIndex()
+	 */
+	@Override
+	public int previousIndex() {
+		return this.previousIndex;
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#remove()
-     */
-    @Override
-    public void remove() {}
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.ListIterator#remove()
+	 */
+	@Override
+	public void remove() {
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#set(java.lang.Object)
-     */
-    @Override
-    public void set(T e) {}
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.ListIterator#set(java.lang.Object)
+	 */
+	@Override
+	public void set(T e) {
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.ListIterator#add(java.lang.Object)
-     */
-    @Override
-    public void add(T e) {}
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.ListIterator#add(java.lang.Object)
+	 */
+	@Override
+	public void add(T e) {
+	}
+
+	@Override
+	public void forEachRemaining(Consumer<? super T> action) {
+		// TODO Auto-generated method stub
+
+	}
 }

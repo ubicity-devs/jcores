@@ -30,303 +30,442 @@ package net.jcores.jre.utils.map;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import net.jcores.jre.interfaces.functions.F1;
 import net.jcores.jre.utils.VanillaUtil;
 
 /**
- * A map decorator that, similar to <a href="http://code.google.com/p/guava-libraries/">Google's Guava</a>, 
- * provides some extra functions for maps. 
+ * A map decorator that, similar to <a
+ * href="http://code.google.com/p/guava-libraries/">Google's Guava</a>, provides
+ * some extra functions for maps.
  * 
  * @author Ralf Biedert
  *
- * @param <K> The type of the key.
- * @param <V> The type of the value.
+ * @param <K>
+ *            The type of the key.
+ * @param <V>
+ *            The type of the value.
  * @since 1.0
  */
 public class MapUtil<K, V> extends VanillaUtil<Map<K, V>> implements Map<K, V> {
-    
-    /** The generator that will be tried when get would return null */
-    private F1<K, V> generator;
-    
-    /** The default to return when get and the generator would return null */
-    private V dfault;
 
+	/** The generator that will be tried when get would return null */
+	private F1<K, V> generator;
 
-    /**
-     * Wraps the given map.
-     * 
-     * @param object The map to wrap.
-     */
-    public MapUtil(Map<K, V> object) {
-        super(object);
-    }
-    
-    /**
-     * Sets the default which will be returned when <code>get()</code> and <code>generator(g)</code> 
-     * would otherwise return <code>null</code>.
-     * 
-     * @param dflt The default to return.
-     * @return This map.
-     */
-    public MapUtil<K, V> dfault(V dflt) {
-        this.dfault = dflt;
-        return this;
-    }
-    
-    
-    /**
-     * Sets the default which will be returned when <code>get()</code> would otherwise return <code>null</code>.
-     * 
-     * @param gen The generator to use.
-     * @return This map.
-     */
-    public MapUtil<K, V> generator(F1<K, V> gen) {
-        this.generator = gen;
-        return this;
-    }
+	/** The default to return when get and the generator would return null */
+	private V dfault;
 
+	/**
+	 * Wraps the given map.
+	 * 
+	 * @param object
+	 *            The map to wrap.
+	 */
+	public MapUtil(Map<K, V> object) {
+		super(object);
+	}
 
-    /**
-     * Returns a key mapped to the given type.
-     * 
-     * @param <R> The return type.
-     * @param key The key to query.
-     * @param type The type as which the object should be returned.
-     * @return The corresponding object if it existed, or null.
-     */
-    @SuppressWarnings("unchecked")
-    public <R> R get(String key, Class<R> type) {
-        return (R) get(key);
-    }
+	/**
+	 * Sets the default which will be returned when <code>get()</code> and
+	 * <code>generator(g)</code> would otherwise return <code>null</code>.
+	 * 
+	 * @param dflt
+	 *            The default to return.
+	 * @return This map.
+	 */
+	public MapUtil<K, V> dfault(V dflt) {
+		this.dfault = dflt;
+		return this;
+	}
 
-    /**
-     * Returns a key mapped to the given type.
-     * 
-     * @param <R> The return type.
-     * @param key The key to query.
-     * @param dflt The default to return if otherwise null would be returned. 
-     * @return The corresponding object if it existed, or the default.
-     */
-    @SuppressWarnings("unchecked")
-    public <R> R get(String key, R dflt) {
-        Object t = get(key);
-        if (t == null) return dflt;
-        return (R) t;
-    }
+	/**
+	 * Sets the default which will be returned when <code>get()</code> would
+	 * otherwise return <code>null</code>.
+	 * 
+	 * @param gen
+	 *            The generator to use.
+	 * @return This map.
+	 */
+	public MapUtil<K, V> generator(F1<K, V> gen) {
+		this.generator = gen;
+		return this;
+	}
 
-    
-    /**
-     * Tries to return the given key as an integer.
-     * 
-     * @param key The key to return.
-     * 
-     * @return The integer value, <code>0</code> if the object was <code>null</code>, 
-     * or <code>hashCode()</code> if the object was unknown.
-     */
-    public int i(String key) {
-        final Object elem = get(key);
+	/**
+	 * Returns a key mapped to the given type.
+	 * 
+	 * @param <R>
+	 *            The return type.
+	 * @param key
+	 *            The key to query.
+	 * @param type
+	 *            The type as which the object should be returned.
+	 * @return The corresponding object if it existed, or null.
+	 */
+	@SuppressWarnings("unchecked")
+	public <R> R get(String key, Class<R> type) {
+		return (R) get(key);
+	}
 
-        // If we didnt have anything, return 0
-        if (elem == null) return 0;
+	/**
+	 * Returns a key mapped to the given type.
+	 * 
+	 * @param <R>
+	 *            The return type.
+	 * @param key
+	 *            The key to query.
+	 * @param dflt
+	 *            The default to return if otherwise null would be returned.
+	 * @return The corresponding object if it existed, or the default.
+	 */
+	@SuppressWarnings("unchecked")
+	public <R> R get(String key, R dflt) {
+		Object t = get(key);
+		if (t == null)
+			return dflt;
+		return (R) t;
+	}
 
-        // If the object if of type number
-        if (elem instanceof Number) { return ((Number) elem).intValue(); }
+	/**
+	 * Tries to return the given key as an integer.
+	 * 
+	 * @param key
+	 *            The key to return.
+	 * 
+	 * @return The integer value, <code>0</code> if the object was
+	 *         <code>null</code>, or <code>hashCode()</code> if the object was
+	 *         unknown.
+	 */
+	public int i(String key) {
+		final Object elem = get(key);
 
-        // If the object if of type number
-        if (elem instanceof String) { return Integer.parseInt((String) elem); }
+		// If we didnt have anything, return 0
+		if (elem == null)
+			return 0;
 
-        // Last resort, return the hash code ...
-        return elem.hashCode();
-    }
-    
-    /**
-     * Tries to return the given key as a long.
-     * 
-     * @param key The key to return.
-     * 
-     * @return The long value, <code>0</code> if the object was <code>null</code>, 
-     * or <code>hashCode()</code> if the object was unknown.
-     */
-    public long l(String key) {
-        final Object elem = get(key);
+		// If the object if of type number
+		if (elem instanceof Number) {
+			return ((Number) elem).intValue();
+		}
 
-        // If we didnt have anything, return 0
-        if (elem == null) return 0;
+		// If the object if of type number
+		if (elem instanceof String) {
+			return Integer.parseInt((String) elem);
+		}
 
-        // If the object if of type number
-        if (elem instanceof Number) { return ((Number) elem).longValue(); }
+		// Last resort, return the hash code ...
+		return elem.hashCode();
+	}
 
-        // If the object if of type number
-        if (elem instanceof String) { return Long.parseLong((String) elem); }
+	/**
+	 * Tries to return the given key as a long.
+	 * 
+	 * @param key
+	 *            The key to return.
+	 * 
+	 * @return The long value, <code>0</code> if the object was
+	 *         <code>null</code>, or <code>hashCode()</code> if the object was
+	 *         unknown.
+	 */
+	public long l(String key) {
+		final Object elem = get(key);
 
-        // Last resort, return the hash code ...
-        return elem.hashCode();
-    }
-    
+		// If we didnt have anything, return 0
+		if (elem == null)
+			return 0;
 
-    /**
-     * Returns the given key as a string.
-     * 
-     * @param key The key to return.
-     * 
-     * @return Returns <code>map.get(key).toString()</code>.
-     */
-    public String s(String key) {
-        final Object elem = get(key);
-        if (elem == null) return null;
-        return elem.toString();
-    }
+		// If the object if of type number
+		if (elem instanceof Number) {
+			return ((Number) elem).longValue();
+		}
 
-    /**
-     * Returns the given key as an integer.
-     * 
-     * @param key The key to return.
-     * 
-     * @return The integer value, <code>0</code> if the object was <code>null</code>, 
-     * or <code>hashCode()</code> if the object was unknown.
-     */
-    public double d(String key) {
-        final Object elem = get(key);
+		// If the object if of type number
+		if (elem instanceof String) {
+			return Long.parseLong((String) elem);
+		}
 
-        // If we didnt have anything, return 0
-        if (elem == null) return 0;
+		// Last resort, return the hash code ...
+		return elem.hashCode();
+	}
 
-        // If the object if of type number
-        if (elem instanceof Number) { return ((Number) elem).doubleValue(); }
+	/**
+	 * Returns the given key as a string.
+	 * 
+	 * @param key
+	 *            The key to return.
+	 * 
+	 * @return Returns <code>map.get(key).toString()</code>.
+	 */
+	public String s(String key) {
+		final Object elem = get(key);
+		if (elem == null)
+			return null;
+		return elem.toString();
+	}
 
-        // If the object if of type number
-        if (elem instanceof String) { return Double.parseDouble((String) elem); }
+	/**
+	 * Returns the given key as an integer.
+	 * 
+	 * @param key
+	 *            The key to return.
+	 * 
+	 * @return The integer value, <code>0</code> if the object was
+	 *         <code>null</code>, or <code>hashCode()</code> if the object was
+	 *         unknown.
+	 */
+	public double d(String key) {
+		final Object elem = get(key);
 
-        // Last resort, return the hash code ...
-        return elem.hashCode();
-    }
+		// If we didnt have anything, return 0
+		if (elem == null)
+			return 0;
 
+		// If the object if of type number
+		if (elem instanceof Number) {
+			return ((Number) elem).doubleValue();
+		}
 
-    /**
-     * Puts the given integer into the slot named key.
-     * 
-     * @param key The key to put.
-     * @param value The integer value to put.
-     */
-    @SuppressWarnings({"unchecked" })
-    public void put(K key, int value) {
-        put(key, (V) Integer.valueOf(value));
-    }
+		// If the object if of type number
+		if (elem instanceof String) {
+			return Double.parseDouble((String) elem);
+		}
 
-    /**
-     * Puts the given integer into the slot named key
-     * 
-     * @param key The key to put.
-     * @param value THe double value to put.
-     */
-    @SuppressWarnings({ "unchecked" })
-    public void put(K key, double value) {
-        put(key, (V) Double.valueOf(value));
-    }
+		// Last resort, return the hash code ...
+		return elem.hashCode();
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.Map#clear()
-     */
-    public void clear() {
-        this.object.clear();
-    }
+	/**
+	 * Puts the given integer into the slot named key.
+	 * 
+	 * @param key
+	 *            The key to put.
+	 * @param value
+	 *            The integer value to put.
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public void put(K key, int value) {
+		put(key, (V) Integer.valueOf(value));
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.Map#containsKey(java.lang.Object)
-     */
-    public boolean containsKey(Object key) {
-        return this.object.containsKey(key);
-    }
-    
-    /* (non-Javadoc)
-     * @see java.util.Map#containsValue(java.lang.Object)
-     */
-    public boolean containsValue(Object value) {
-        return this.object.containsValue(value);
-    }
-   
-    /* (non-Javadoc)
-     * @see java.util.Map#entrySet()
-     */
-    public Set<java.util.Map.Entry<K, V>> entrySet() {
-        return this.object.entrySet();
-    }
+	/**
+	 * Puts the given integer into the slot named key
+	 * 
+	 * @param key
+	 *            The key to put.
+	 * @param value
+	 *            THe double value to put.
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public void put(K key, double value) {
+		put(key, (V) Double.valueOf(value));
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.Map#get(java.lang.Object)
-     */
-    @SuppressWarnings("unchecked")
-    public V get(Object key) {
-        V v = this.object.get(key);
-        
-        // Check if we have to generate the object
-        if(v == null && this.generator != null) {
-            v = this.generator.f((K) key);
-            put((K) key, v);
-        }
-        
-        // Check if we can use teh default
-        if(v == null && this.dfault != null) {
-            v = this.dfault;
-            put((K) key, v);            
-        }
-        
-        return v;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#clear()
+	 */
+	@Override
+	public void clear() {
+		this.object.clear();
+	}
 
-    /* (non-Javadoc)
-     * @see java.util.Map#isEmpty()
-     */
-    public boolean isEmpty() {
-        return this.object.isEmpty();
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#containsKey(java.lang.Object)
+	 */
+	@Override
+	public boolean containsKey(Object key) {
+		return this.object.containsKey(key);
+	}
 
- 
-    /* (non-Javadoc)
-     * @see java.util.Map#keySet()
-     */
-    public Set<K> keySet() {
-        return this.object.keySet();
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#containsValue(java.lang.Object)
+	 */
+	@Override
+	public boolean containsValue(Object value) {
+		return this.object.containsValue(value);
+	}
 
-    
-    /* (non-Javadoc)
-     * @see java.util.Map#put(java.lang.Object, java.lang.Object)
-     */
-    public V put(K key, V value) {
-        return this.object.put(key, value);
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#entrySet()
+	 */
+	@Override
+	public Set<java.util.Map.Entry<K, V>> entrySet() {
+		return this.object.entrySet();
+	}
 
-   
-    /* (non-Javadoc)
-     * @see java.util.Map#putAll(java.util.Map)
-     */
-    public void putAll(Map<? extends K, ? extends V> t) {
-        this.object.putAll(t);
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#get(java.lang.Object)
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public V get(Object key) {
+		V v = this.object.get(key);
 
-  
-    /* (non-Javadoc)
-     * @see java.util.Map#remove(java.lang.Object)
-     */
-    public V remove(Object key) {
-        return this.object.remove(key);
-    }
+		// Check if we have to generate the object
+		if (v == null && this.generator != null) {
+			v = this.generator.f((K) key);
+			put((K) key, v);
+		}
 
- 
-    /* (non-Javadoc)
-     * @see java.util.Map#size()
-     */
-    public int size() {
-        return this.object.size();
-    }
+		// Check if we can use teh default
+		if (v == null && this.dfault != null) {
+			v = this.dfault;
+			put((K) key, v);
+		}
 
- 
-    /* (non-Javadoc)
-     * @see java.util.Map#values()
-     */
-    public Collection<V> values() {
-        return this.object.values();
-    }
+		return v;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#isEmpty()
+	 */
+	@Override
+	public boolean isEmpty() {
+		return this.object.isEmpty();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#keySet()
+	 */
+	@Override
+	public Set<K> keySet() {
+		return this.object.keySet();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#put(java.lang.Object, java.lang.Object)
+	 */
+	@Override
+	public V put(K key, V value) {
+		return this.object.put(key, value);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#putAll(java.util.Map)
+	 */
+	@Override
+	public void putAll(Map<? extends K, ? extends V> t) {
+		this.object.putAll(t);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#remove(java.lang.Object)
+	 */
+	@Override
+	public V remove(Object key) {
+		return this.object.remove(key);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#size()
+	 */
+	@Override
+	public int size() {
+		return this.object.size();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Map#values()
+	 */
+	@Override
+	public Collection<V> values() {
+		return this.object.values();
+	}
+
+	@Override
+	public V getOrDefault(Object key, V defaultValue) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void forEach(BiConsumer<? super K, ? super V> action) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void replaceAll(
+			BiFunction<? super K, ? super V, ? extends V> function) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public V putIfAbsent(K key, V value) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean remove(Object key, Object value) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean replace(K key, V oldValue, V newValue) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public V replace(K key, V value) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public V computeIfAbsent(K key,
+			Function<? super K, ? extends V> mappingFunction) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public V computeIfPresent(K key,
+			BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public V compute(K key,
+			BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public V merge(K key, V value,
+			BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
